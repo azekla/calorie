@@ -20,7 +20,7 @@
 - Frontend: React, Vite, Context API, адаптивный CSS
 - Infra: Docker, Docker Compose
 
-## Telegram Web App и Oracle Ubuntu
+## Telegram Web App и OVH VDS
 
 Проект уже адаптирован под следующий production-сценарий:
 
@@ -28,14 +28,15 @@
 - API вызывается через `/api`
 - есть endpoint `POST /api/auth/telegram`
 - поддержан автологин через Telegram `initData`
-- подготовлен `docker-compose.prod.yml` для Oracle Ubuntu
-- есть `nginx` reverse proxy для внешнего запуска через IP, домен или `ngrok`
+- подготовлен `docker-compose.prod.yml` для VDS
+- frontend и backend публикуются только на `127.0.0.1`
+- внешний `nginx` и HTTPS настраиваются на хосте сервера
 
 Что понадобится позже:
 
 - `TELEGRAM_BOT_TOKEN`
 - публичный `HTTPS` URL
-- для бесплатного старта можно использовать `ngrok`
+- домен или поддомен, указывающий на сервер
 
 ## Структура
 
@@ -108,7 +109,7 @@ npm install
 npm run dev
 ```
 
-## Production для Oracle Ubuntu
+## Production для OVH VDS
 
 Подготовлен отдельный production compose:
 
@@ -118,34 +119,81 @@ docker compose -f docker-compose.prod.yml up --build -d
 
 Production схема:
 
-- `nginx` принимает внешний трафик
+- `frontend` доступен только локально на `127.0.0.1:3000`
+- `backend` доступен только локально на `127.0.0.1:8080`
+- системный `nginx` на сервере принимает внешний трафик
 - `/` -> frontend
-- `/api` -> backend
+- `/api` и `/health` -> backend
 - PostgreSQL не публикуется наружу
 
 Файлы:
 
 - `docker-compose.prod.yml`
-- `infra/nginx/nginx.conf`
+- `infra/nginx/tg-calorie.ovh.conf`
 - `frontend/Dockerfile.prod`
 
-## Временный бесплатный запуск через ngrok
+## Пошаговый деплой на OVH
 
-Если домена ещё нет, можно использовать `ngrok`.
+1. Установи Docker, Docker Compose plugin, nginx и certbot:
 
-Логика такая:
+```bash
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin nginx certbot python3-certbot-nginx git
+sudo usermod -aG docker $USER
+```
 
-1. Поднять production stack на сервере
-2. Пробросить наружу порт `80`
-3. Получить `https://...ngrok-free.app`
-4. Использовать этот URL как Web App URL в Telegram
-
-При таком запуске укажи в `.env`:
+2. Перелогинься по SSH, клонируй проект и создай `.env`:
 
 ```env
-FRONTEND_URL=https://your-ngrok-url.ngrok-free.app
-ALLOWED_ORIGINS=https://your-ngrok-url.ngrok-free.app
-TELEGRAM_BOT_TOKEN=your_bot_token
+POSTGRES_DB=tg_calorie
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=CHANGE_ME_STRONG_DB_PASSWORD
+JWT_SECRET=CHANGE_ME_LONG_RANDOM_SECRET
+TELEGRAM_BOT_TOKEN=PASTE_NEW_BOT_TOKEN
+FRONTEND_URL=https://app.example.com
+ALLOWED_ORIGINS=https://app.example.com
+DEMO_EMAIL=demo@tgcalorie.local
+DEMO_PASSWORD=demo12345
+```
+
+3. Подними контейнеры:
+
+```bash
+docker compose -f docker-compose.prod.yml up --build -d
+```
+
+4. Проверь локальные сервисы:
+
+```bash
+curl http://127.0.0.1:3000
+curl http://127.0.0.1:8080/health
+```
+
+5. Скопируй `infra/nginx/tg-calorie.ovh.conf` в `/etc/nginx/sites-available/tg-calorie` и замени `app.example.com` на свой домен.
+
+6. Включи сайт:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/tg-calorie /etc/nginx/sites-enabled/tg-calorie
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+7. Выпусти сертификат:
+
+```bash
+sudo certbot --nginx -d app.example.com
+```
+
+8. Убедись, что сайт открывается по `https://app.example.com`.
+
+9. Укажи этот же URL в `@BotFather` как Web App URL.
+
+10. После обновлений приложения деплой:
+
+```bash
+git pull
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ## Telegram Web App auth
