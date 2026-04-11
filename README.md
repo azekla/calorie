@@ -1,6 +1,6 @@
 # TG Calorie
 
-Полноценное мини-веб-приложение для подсчёта калорий с backend на Go и Telegram WebApp-интеграцией на React.
+Полноценное веб-приложение для подсчёта калорий с backend на Go и frontend на React.
 
 ## Что внутри
 
@@ -19,21 +19,18 @@
 - Frontend: React, Vite, Context API, адаптивный CSS
 - Infra: Docker, Docker Compose
 
-## Telegram Web App и OVH VDS
+## Сайт на VDS
 
 Проект уже адаптирован под следующий production-сценарий:
 
 - frontend и backend работают под одним origin
 - API вызывается через `/api`
-- есть endpoint `POST /api/auth/telegram`
-- поддержан автологин через Telegram `initData`
 - подготовлен `docker-compose.prod.yml` для VDS
 - frontend и backend публикуются только на `127.0.0.1`
 - внешний `nginx` и HTTPS настраиваются на хосте сервера
 
 Что понадобится позже:
 
-- `TELEGRAM_BOT_TOKEN`
 - публичный `HTTPS` URL
 - домен или поддомен, указывающий на сервер
 
@@ -148,7 +145,6 @@ POSTGRES_DB=tg_calorie
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=CHANGE_ME_STRONG_DB_PASSWORD
 JWT_SECRET=CHANGE_ME_LONG_RANDOM_SECRET
-TELEGRAM_BOT_TOKEN=PASTE_NEW_BOT_TOKEN
 FRONTEND_URL=https://app.example.com
 ALLOWED_ORIGINS=https://app.example.com
 DEMO_EMAIL=demo@tgcalorie.local
@@ -186,35 +182,12 @@ sudo certbot --nginx -d app.example.com
 
 8. Убедись, что сайт открывается по `https://app.example.com`.
 
-9. Укажи этот же URL в `@BotFather` как Web App URL.
-
-10. После обновлений приложения деплой:
+9. После обновлений приложения деплой:
 
 ```bash
 git pull
 docker compose -f docker-compose.prod.yml up -d --build
 ```
-
-## Telegram Web App auth
-
-Поддерживается endpoint:
-
-- `POST /api/auth/telegram`
-
-Frontend:
-
-- автоматически определяет `window.Telegram.WebApp`
-- вызывает `Telegram.WebApp.ready()` и `expand()`
-- пытается выполнить автологин через `initData`
-- вне Telegram сохраняется обычный login/register flow
-
-Backend:
-
-- валидирует `initData` через `TELEGRAM_BOT_TOKEN`
-- создаёт пользователя при первом входе
-- создаёт cookie session как и при обычном входе
-
-Пока `TELEGRAM_BOT_TOKEN` не задан, Telegram auth endpoint будет отвечать ошибкой настройки.
 
 ## Цели и калории
 

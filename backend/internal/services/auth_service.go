@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"kawaii-calorie-app/backend/internal/models"
@@ -93,63 +92,6 @@ func (s *AuthService) Register(name, email, password string, profileInput Regist
 		},
 	}
 
-	if err := s.repo.DB.Create(&user).Error; err != nil {
-		return nil, err
-	}
-	if err := s.repo.DB.Preload("Profile").First(&user, user.ID).Error; err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
-func (s *AuthService) TelegramLogin(userData *utils.TelegramUser) (*models.User, error) {
-	var user models.User
-	if err := s.repo.DB.Preload("Profile").Where("telegram_id = ?", userData.ID).First(&user).Error; err == nil {
-		return &user, nil
-	}
-
-	slug := strings.TrimSpace(strings.ToLower(userData.Username))
-	if slug == "" {
-		slug = strings.TrimSpace(strings.ToLower(strings.Join([]string{userData.FirstName, userData.LastName}, "_")))
-		slug = strings.ReplaceAll(slug, " ", "_")
-		slug = strings.ReplaceAll(slug, "__", "_")
-	}
-	slug = strings.Trim(slug, "_")
-	if slug == "" {
-		slug = "telegram_user"
-	}
-	generatedEmail := fmt.Sprintf("%s_%d@telegram.local", slug, userData.ID)
-
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte("telegram-login-disabled"), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, err
-	}
-	name := strings.TrimSpace(strings.Join([]string{userData.FirstName, userData.LastName}, " "))
-	if name == "" {
-		name = "Telegram User"
-	}
-	telegramID := userData.ID
-	user = models.User{
-		Email:             generatedEmail,
-		PasswordHash:      string(passwordHash),
-		Name:              name,
-		Theme:             "soft-pink",
-		TelegramID:        &telegramID,
-		TelegramUsername:  userData.Username,
-		TelegramFirstName: userData.FirstName,
-		TelegramLastName:  userData.LastName,
-		Profile: models.Profile{
-			Gender:           "женский",
-			HeightCM:         165,
-			WeightKG:         58,
-			Age:              24,
-			ActivityLevel:    "умеренная",
-			GoalType:         "maintain",
-			DailyCalorieGoal: 2000,
-			WaterGoalML:      2000,
-			StepsGoal:        8000,
-		},
-	}
 	if err := s.repo.DB.Create(&user).Error; err != nil {
 		return nil, err
 	}

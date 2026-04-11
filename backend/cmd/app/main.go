@@ -48,10 +48,6 @@ func main() {
 		log.Fatalf("migration failed: %v", err)
 	}
 
-	if err := db.Model(&models.User{}).Where("telegram_id = ?", 0).Update("telegram_id", nil).Error; err != nil {
-		log.Fatalf("telegram_id cleanup failed: %v", err)
-	}
-
 	if err := seed.Run(db); err != nil {
 		log.Fatalf("seed failed: %v", err)
 	}

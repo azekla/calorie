@@ -20,7 +20,6 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       FRONTEND_URL: http://localhost:5173
       ALLOWED_ORIGINS: http://localhost:5173,http://localhost:4173
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       DEMO_EMAIL: ${DEMO_EMAIL}
       DEMO_PASSWORD: ${DEMO_PASSWORD}
     ports:

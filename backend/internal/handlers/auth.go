@@ -80,28 +80,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	utils.JSON(c, http.StatusOK, user)
 }
 
-func (h *AuthHandler) Telegram(c *gin.Context) {
-	var body struct {
-		InitData string `json:"initData"`
-	}
-	if err := c.ShouldBindJSON(&body); err != nil {
-		utils.Error(c, http.StatusBadRequest, "Некорректные данные Telegram Web App")
-		return
-	}
-	telegramUser, err := utils.VerifyTelegramInitData(h.cfg.TelegramBotToken, body.InitData)
-	if err != nil {
-		utils.Error(c, http.StatusUnauthorized, err.Error())
-		return
-	}
-	user, err := h.service.TelegramLogin(telegramUser)
-	if err != nil {
-		utils.Error(c, http.StatusInternalServerError, "Не удалось выполнить вход через Telegram")
-		return
-	}
-	h.setSession(c, user.ID)
-	utils.JSON(c, http.StatusOK, user)
-}
-
 func (h *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie("token", "", -1, "/", "", h.cfg.CookieSecure, true)
 	utils.JSON(c, http.StatusOK, gin.H{"message": "Выход выполнен"})

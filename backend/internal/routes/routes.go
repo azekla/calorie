@@ -39,7 +39,6 @@ func SetupRouter(cfg config.Config, db *gorm.DB) *gin.Engine {
 		{
 			auth.POST("/register", authHandler.Register)
 			auth.POST("/login", authHandler.Login)
-			auth.POST("/telegram", authHandler.Telegram)
 			auth.POST("/logout", authHandler.Logout)
 			auth.GET("/me", middleware.AuthRequired(cfg), authHandler.Me)
 		}

@@ -9,30 +9,28 @@ import (
 )
 
 type Config struct {
-	Port             string
-	DatabaseURL      string
-	JWTSecret        string
-	CookieSecure     bool
-	FrontendURL      string
-	AllowedOrigins   []string
-	TelegramBotToken string
-	DemoEmail        string
-	DemoPassword     string
-	AppEnv           string
+	Port           string
+	DatabaseURL    string
+	JWTSecret      string
+	CookieSecure   bool
+	FrontendURL    string
+	AllowedOrigins []string
+	DemoEmail      string
+	DemoPassword   string
+	AppEnv         string
 }
 
 func Load() Config {
 	_ = godotenv.Load()
 
 	cfg := Config{
-		Port:             getEnv("PORT", "8080"),
-		DatabaseURL:      getEnv("DATABASE_URL", "postgres://postgres:postgres@db:5432/tg_calorie?sslmode=disable"),
-		JWTSecret:        getEnv("JWT_SECRET", "super-secret-tg-calorie-key"),
-		FrontendURL:      getEnv("FRONTEND_URL", "http://localhost:5173"),
-		TelegramBotToken: getEnv("TELEGRAM_BOT_TOKEN", ""),
-		DemoEmail:        getEnv("DEMO_EMAIL", "demo@tgcalorie.local"),
-		DemoPassword:     getEnv("DEMO_PASSWORD", "demo12345"),
-		AppEnv:           getEnv("APP_ENV", "development"),
+		Port:         getEnv("PORT", "8080"),
+		DatabaseURL:  getEnv("DATABASE_URL", "postgres://postgres:postgres@db:5432/tg_calorie?sslmode=disable"),
+		JWTSecret:    getEnv("JWT_SECRET", "super-secret-tg-calorie-key"),
+		FrontendURL:  getEnv("FRONTEND_URL", "http://localhost:5173"),
+		DemoEmail:    getEnv("DEMO_EMAIL", "demo@tgcalorie.local"),
+		DemoPassword: getEnv("DEMO_PASSWORD", "demo12345"),
+		AppEnv:       getEnv("APP_ENV", "development"),
 	}
 	cfg.CookieSecure = cfg.AppEnv == "production"
 	cfg.AllowedOrigins = parseOrigins(getEnv("ALLOWED_ORIGINS", cfg.FrontendURL+",http://localhost:4173,http://localhost:5173"))

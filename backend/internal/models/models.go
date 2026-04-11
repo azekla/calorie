@@ -3,18 +3,14 @@ package models
 import "time"
 
 type User struct {
-	ID                uint      `gorm:"primaryKey" json:"id"`
-	Email             string    `gorm:"uniqueIndex;not null" json:"email"`
-	PasswordHash      string    `gorm:"not null" json:"-"`
-	Name              string    `gorm:"not null" json:"name"`
-	Theme             string    `gorm:"default:soft-pink" json:"theme"`
-	TelegramID        *int64    `gorm:"uniqueIndex" json:"telegramId,omitempty"`
-	TelegramUsername  string    `json:"telegramUsername,omitempty"`
-	TelegramFirstName string    `json:"telegramFirstName,omitempty"`
-	TelegramLastName  string    `json:"telegramLastName,omitempty"`
-	CreatedAt         time.Time `json:"createdAt"`
-	UpdatedAt         time.Time `json:"updatedAt"`
-	Profile           Profile   `json:"profile"`
+	ID           uint      `gorm:"primaryKey" json:"id"`
+	Email        string    `gorm:"uniqueIndex;not null" json:"email"`
+	PasswordHash string    `gorm:"not null" json:"-"`
+	Name         string    `gorm:"not null" json:"name"`
+	Theme        string    `gorm:"default:soft-pink" json:"theme"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+	Profile      Profile   `json:"profile"`
 }
 
 type Profile struct {
