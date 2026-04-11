@@ -25,12 +25,35 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Name     string `json:"name"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
+		Profile  struct {
+			Gender                   string  `json:"gender"`
+			HeightCM                 int     `json:"heightCm"`
+			WeightKG                 float64 `json:"weightKg"`
+			Age                      int     `json:"age"`
+			ActivityLevel            string  `json:"activityLevel"`
+			GoalType                 string  `json:"goalType"`
+			DailyCalorieGoal         int     `json:"dailyCalorieGoal"`
+			ManualCalorieGoalEnabled bool    `json:"manualCalorieGoalEnabled"`
+			WaterGoalML              int     `json:"waterGoalMl"`
+			StepsGoal                int     `json:"stepsGoal"`
+		} `json:"profile"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		utils.Error(c, http.StatusBadRequest, "Некорректные данные")
 		return
 	}
-	user, err := h.service.Register(body.Name, body.Email, body.Password)
+	user, err := h.service.Register(body.Name, body.Email, body.Password, services.RegisterProfileInput{
+		Gender:                   body.Profile.Gender,
+		HeightCM:                 body.Profile.HeightCM,
+		WeightKG:                 body.Profile.WeightKG,
+		Age:                      body.Profile.Age,
+		ActivityLevel:            body.Profile.ActivityLevel,
+		GoalType:                 body.Profile.GoalType,
+		DailyCalorieGoal:         body.Profile.DailyCalorieGoal,
+		ManualCalorieGoalEnabled: body.Profile.ManualCalorieGoalEnabled,
+		WaterGoalML:              body.Profile.WaterGoalML,
+		StepsGoal:                body.Profile.StepsGoal,
+	})
 	if err != nil {
 		utils.Error(c, http.StatusBadRequest, err.Error())
 		return

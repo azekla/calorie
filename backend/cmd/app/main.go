@@ -39,7 +39,6 @@ func main() {
 		&models.User{},
 		&models.Profile{},
 		&models.FoodEntry{},
-		&models.FavoriteFood{},
 		&models.MealTemplate{},
 		&models.MealItem{},
 		&models.WaterLog{},

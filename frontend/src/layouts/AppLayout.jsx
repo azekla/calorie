@@ -2,12 +2,8 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 const links = [
-  ['dashboard', 'Главная'],
   ['diary', 'Дневник'],
-  ['favorites', 'Избранное'],
-  ['meals', 'Блюда'],
   ['history', 'История'],
-  ['progress', 'Прогресс'],
   ['profile', 'Профиль'],
 ]
 
@@ -21,7 +17,7 @@ export default function AppLayout() {
           <div className="brand-bow">♡</div>
           <div>
             <p className="eyebrow">TG Calorie</p>
-            <h1>Розовый баланс</h1>
+            <h1>Pink diary</h1>
           </div>
         </div>
         <div className="profile-chip">
@@ -36,8 +32,8 @@ export default function AppLayout() {
           ))}
         </nav>
         <div className="sidebar-note">
-          <strong>Sweet but balanced</strong>
-          <span>Лёгкий трекер без перегруза, где всё важное видно сразу.</span>
+          <strong>Только главное</strong>
+          <span>Дневник, история и профиль без лишних вкладок и перегруза.</span>
         </div>
         <button className="ghost-button" onClick={logout}>Выйти</button>
       </aside>

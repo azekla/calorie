@@ -3,19 +3,18 @@ package models
 import "time"
 
 type User struct {
-	ID                uint           `gorm:"primaryKey" json:"id"`
-	Email             string         `gorm:"uniqueIndex;not null" json:"email"`
-	PasswordHash      string         `gorm:"not null" json:"-"`
-	Name              string         `gorm:"not null" json:"name"`
-	Theme             string         `gorm:"default:soft-pink" json:"theme"`
-	TelegramID        *int64         `gorm:"uniqueIndex" json:"telegramId,omitempty"`
-	TelegramUsername  string         `json:"telegramUsername,omitempty"`
-	TelegramFirstName string         `json:"telegramFirstName,omitempty"`
-	TelegramLastName  string         `json:"telegramLastName,omitempty"`
-	CreatedAt         time.Time      `json:"createdAt"`
-	UpdatedAt         time.Time      `json:"updatedAt"`
-	Profile           Profile        `json:"profile"`
-	Favorites         []FavoriteFood `json:"favorites,omitempty"`
+	ID                uint      `gorm:"primaryKey" json:"id"`
+	Email             string    `gorm:"uniqueIndex;not null" json:"email"`
+	PasswordHash      string    `gorm:"not null" json:"-"`
+	Name              string    `gorm:"not null" json:"name"`
+	Theme             string    `gorm:"default:soft-pink" json:"theme"`
+	TelegramID        *int64    `gorm:"uniqueIndex" json:"telegramId,omitempty"`
+	TelegramUsername  string    `json:"telegramUsername,omitempty"`
+	TelegramFirstName string    `json:"telegramFirstName,omitempty"`
+	TelegramLastName  string    `json:"telegramLastName,omitempty"`
+	CreatedAt         time.Time `json:"createdAt"`
+	UpdatedAt         time.Time `json:"updatedAt"`
+	Profile           Profile   `json:"profile"`
 }
 
 type Profile struct {
@@ -50,20 +49,6 @@ type FoodEntry struct {
 	Notes        string    `json:"notes"`
 	CreatedAt    time.Time `json:"createdAt"`
 	UpdatedAt    time.Time `json:"updatedAt"`
-}
-
-type FavoriteFood struct {
-	ID           uint      `gorm:"primaryKey" json:"id"`
-	UserID       uint      `gorm:"index;not null" json:"userId"`
-	Name         string    `gorm:"not null" json:"name"`
-	DefaultGrams float64   `json:"defaultGrams"`
-	Calories     float64   `json:"calories"`
-	Protein      float64   `json:"protein"`
-	Fat          float64   `json:"fat"`
-	Carbs        float64   `json:"carbs"`
-	Category     string    `json:"category"`
-	IsSweet      bool      `json:"isSweet"`
-	CreatedAt    time.Time `json:"createdAt"`
 }
 
 type MealTemplate struct {

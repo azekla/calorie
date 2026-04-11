@@ -50,23 +50,6 @@ func Run(db *gorm.DB) error {
 		return err
 	}
 
-	favorites := []models.FavoriteFood{
-		{Name: "Яйцо", DefaultGrams: 50, Calories: 78, Protein: 6.3, Fat: 5.3, Carbs: 0.6, Category: "завтрак"},
-		{Name: "Рис", DefaultGrams: 100, Calories: 130, Protein: 2.7, Fat: 0.3, Carbs: 28, Category: "обед"},
-		{Name: "Курица", DefaultGrams: 120, Calories: 198, Protein: 37, Fat: 4.3, Carbs: 0, Category: "обед"},
-		{Name: "Банан", DefaultGrams: 100, Calories: 89, Protein: 1.1, Fat: 0.3, Carbs: 23, Category: "перекус"},
-		{Name: "Хлеб", DefaultGrams: 40, Calories: 106, Protein: 3.4, Fat: 1.1, Carbs: 20.2, Category: "завтрак"},
-		{Name: "Кофе", DefaultGrams: 240, Calories: 4, Protein: 0.3, Fat: 0, Carbs: 0, Category: "напитки"},
-		{Name: "Сыр", DefaultGrams: 30, Calories: 108, Protein: 7.5, Fat: 8.6, Carbs: 0.3, Category: "перекус"},
-		{Name: "Шоколад", DefaultGrams: 25, Calories: 134, Protein: 1.8, Fat: 8.6, Carbs: 13.8, Category: "сладкое", IsSweet: true},
-	}
-	for i := range favorites {
-		favorites[i].UserID = user.ID
-	}
-	if err := db.Create(&favorites).Error; err != nil {
-		return err
-	}
-
 	meals := []models.MealTemplate{
 		{Name: "Нежный завтрак", Description: "Яйца, хлеб и сыр", UserID: user.ID, Items: []models.MealItem{{Name: "Яйцо", Grams: 100, Calories: 156, Protein: 12.6, Fat: 10.6, Carbs: 1.2}, {Name: "Хлеб", Grams: 100, Calories: 265, Protein: 8.5, Fat: 2.7, Carbs: 50.5}, {Name: "Сыр", Grams: 30, Calories: 108, Protein: 7.5, Fat: 8.6, Carbs: 0.3}}},
 		{Name: "Ланч balance", Description: "Рис и курица", UserID: user.ID, Items: []models.MealItem{{Name: "Рис", Grams: 150, Calories: 195, Protein: 4.1, Fat: 0.4, Carbs: 42}, {Name: "Курица", Grams: 150, Calories: 248, Protein: 46.2, Fat: 5.4, Carbs: 0}}},

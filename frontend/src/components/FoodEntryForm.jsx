@@ -14,7 +14,22 @@ const defaultState = {
   notes: '',
 }
 
-export default function FoodEntryForm({ initialValue, onSubmit, submitLabel = 'Сохранить' }) {
+function createDefaultState(entryDate) {
+  return { ...defaultState, entryDate: entryDate || todayString() }
+}
+
+function normalizePayload(form) {
+  return {
+    ...form,
+    calories: Number(form.calories),
+    protein: Number(form.protein),
+    fat: Number(form.fat),
+    carbs: Number(form.carbs),
+    grams: Number(form.grams),
+  }
+}
+
+export default function FoodEntryForm({ initialValue, defaultDate, onSubmit, onSaveTemplate, submitLabel = 'Сохранить' }) {
   const [form, setForm] = useState(defaultState)
   const [calc, setCalc] = useState({
     per100Calories: '',
@@ -34,7 +49,7 @@ export default function FoodEntryForm({ initialValue, onSubmit, submitLabel = '�
   }
 
   useEffect(() => {
-    setForm(initialValue ? { ...defaultState, ...initialValue, entryDate: initialValue.entryDate?.slice(0, 10) || todayString() } : defaultState)
+    setForm(initialValue ? { ...createDefaultState(defaultDate), ...initialValue, entryDate: initialValue.entryDate?.slice(0, 10) || defaultDate || todayString() } : createDefaultState(defaultDate))
     setCalc({
       per100Calories: '',
       per100Protein: '',
@@ -42,7 +57,7 @@ export default function FoodEntryForm({ initialValue, onSubmit, submitLabel = '�
       per100Carbs: '',
       consumedGrams: initialValue?.grams || 20,
     })
-  }, [initialValue])
+  }, [defaultDate, initialValue])
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target
@@ -51,15 +66,8 @@ export default function FoodEntryForm({ initialValue, onSubmit, submitLabel = '�
 
   const handleSubmit = async (event) => {
     event.preventDefault()
-    await onSubmit({
-      ...form,
-      calories: Number(form.calories),
-      protein: Number(form.protein),
-      fat: Number(form.fat),
-      carbs: Number(form.carbs),
-      grams: Number(form.grams),
-    })
-    if (!initialValue) setForm(defaultState)
+    await onSubmit(normalizePayload(form))
+    if (!initialValue) setForm(createDefaultState(defaultDate))
   }
 
   const handleCalcChange = (event) => {
@@ -76,6 +84,11 @@ export default function FoodEntryForm({ initialValue, onSubmit, submitLabel = '�
       fat: calculatedValues.fat.toFixed(1),
       carbs: calculatedValues.carbs.toFixed(1),
     }))
+  }
+
+  const saveTemplate = async () => {
+    if (!onSaveTemplate || !canSubmit) return
+    await onSaveTemplate(normalizePayload(form))
   }
 
   return (
@@ -177,7 +190,10 @@ export default function FoodEntryForm({ initialValue, onSubmit, submitLabel = '�
         <textarea name="notes" placeholder="Например, домашняя порция или комментарий к блюду" value={form.notes} onChange={handleChange} />
       </label>
       <label className="check-row"><input name="isSweet" type="checkbox" checked={form.isSweet} onChange={handleChange} /> Это сладкое</label>
-      <button className="submit-button" type="submit" disabled={!canSubmit}>{submitLabel}</button>
+      <div className="row-actions">
+        {onSaveTemplate && <button className="ghost-button accent-soft" type="button" onClick={saveTemplate} disabled={!canSubmit}>Сохранить как шаблон</button>}
+        <button className="submit-button" type="submit" disabled={!canSubmit}>{submitLabel}</button>
+      </div>
     </form>
   )
 }

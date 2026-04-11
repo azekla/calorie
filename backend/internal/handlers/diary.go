@@ -39,6 +39,15 @@ func (h *DiaryHandler) GetEntries(c *gin.Context) {
 	utils.JSON(c, http.StatusOK, entries)
 }
 
+func (h *DiaryHandler) GetRecentEntries(c *gin.Context) {
+	entries, err := h.service.GetRecentEntries(middleware.UserID(c))
+	if err != nil {
+		utils.Error(c, http.StatusInternalServerError, "Не удалось получить последние записи")
+		return
+	}
+	utils.JSON(c, http.StatusOK, entries)
+}
+
 func (h *DiaryHandler) CreateEntry(c *gin.Context) {
 	var body struct {
 		EntryDate    string  `json:"entryDate"`
@@ -148,41 +157,6 @@ func (h *DiaryHandler) DeleteEntry(c *gin.Context) {
 		return
 	}
 	utils.JSON(c, http.StatusOK, gin.H{"message": "Запись удалена"})
-}
-
-func (h *DiaryHandler) GetFavorites(c *gin.Context) {
-	favorites, err := h.service.GetFavorites(middleware.UserID(c))
-	if err != nil {
-		utils.Error(c, http.StatusInternalServerError, "Не удалось получить избранное")
-		return
-	}
-	utils.JSON(c, http.StatusOK, favorites)
-}
-
-func (h *DiaryHandler) CreateFavorite(c *gin.Context) {
-	var favorite models.FavoriteFood
-	if err := c.ShouldBindJSON(&favorite); err != nil {
-		utils.Error(c, http.StatusBadRequest, "Некорректные данные продукта")
-		return
-	}
-	created, err := h.service.CreateFavorite(middleware.UserID(c), favorite)
-	if err != nil {
-		utils.Error(c, http.StatusBadRequest, err.Error())
-		return
-	}
-	utils.JSON(c, http.StatusCreated, created)
-}
-
-func (h *DiaryHandler) DeleteFavorite(c *gin.Context) {
-	id, ok := parseID(c)
-	if !ok {
-		return
-	}
-	if err := h.service.DeleteFavorite(middleware.UserID(c), id); err != nil {
-		utils.Error(c, http.StatusNotFound, err.Error())
-		return
-	}
-	utils.JSON(c, http.StatusOK, gin.H{"message": "Удалено из избранного"})
 }
 
 func (h *DiaryHandler) GetMeals(c *gin.Context) {

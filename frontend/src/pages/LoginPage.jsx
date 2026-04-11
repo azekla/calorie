@@ -22,11 +22,11 @@ export default function LoginPage() {
       <div className="auth-card card soft-glow">
         <p className="eyebrow">Добро пожаловать</p>
         <h1>TG Calorie</h1>
-        <p className="muted-text">Милый трекер калорий, воды, шагов и красивого баланса дня.</p>
+        <p className="muted-text">Минималистичный pink-дневник калорий с историей и быстрыми повторами.</p>
         <div className="auth-badge-row">
-          <span className="badge-pill">dashboard</span>
           <span className="badge-pill">дневник</span>
           <span className="badge-pill">история</span>
+          <span className="badge-pill">профиль</span>
         </div>
         {telegramMode && <div className="notice-banner">Приложение открыто внутри Telegram. Можно войти автоматически через Telegram Web App.</div>}
         <form className="grid-form" onSubmit={submit}>

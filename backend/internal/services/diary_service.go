@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"kawaii-calorie-app/backend/internal/models"
@@ -40,6 +41,29 @@ func (s *DiaryService) GetEntries(userID uint, date string) ([]models.FoodEntry,
 	err := s.repo.DB.Where("user_id = ? AND entry_date >= ? AND entry_date < ?", userID, start, end).
 		Order("entry_date asc, id asc").Find(&entries).Error
 	return entries, err
+}
+
+func (s *DiaryService) GetRecentEntries(userID uint) ([]models.FoodEntry, error) {
+	var entries []models.FoodEntry
+	if err := s.repo.DB.Where("user_id = ?", userID).Order("updated_at desc, id desc").Limit(100).Find(&entries).Error; err != nil {
+		return nil, err
+	}
+
+	unique := make([]models.FoodEntry, 0, 12)
+	seen := map[string]bool{}
+	for _, entry := range entries {
+		key := strings.ToLower(strings.TrimSpace(entry.Name))
+		if key == "" || seen[key] {
+			continue
+		}
+		seen[key] = true
+		unique = append(unique, entry)
+		if len(unique) == 12 {
+			break
+		}
+	}
+
+	return unique, nil
 }
 
 func (s *DiaryService) CreateEntry(userID uint, entry models.FoodEntry) (*models.FoodEntry, error) {
@@ -86,31 +110,6 @@ func (s *DiaryService) DeleteEntry(userID, id uint) error {
 	result := s.repo.DB.Where("user_id = ? AND id = ?", userID, id).Delete(&models.FoodEntry{})
 	if result.RowsAffected == 0 {
 		return errors.New("запись не найдена")
-	}
-	return result.Error
-}
-
-func (s *DiaryService) GetFavorites(userID uint) ([]models.FavoriteFood, error) {
-	var favorites []models.FavoriteFood
-	err := s.repo.DB.Where("user_id = ?", userID).Order("name asc").Find(&favorites).Error
-	return favorites, err
-}
-
-func (s *DiaryService) CreateFavorite(userID uint, favorite models.FavoriteFood) (*models.FavoriteFood, error) {
-	if favorite.Name == "" {
-		return nil, errors.New("название обязательно")
-	}
-	favorite.UserID = userID
-	if err := s.repo.DB.Create(&favorite).Error; err != nil {
-		return nil, err
-	}
-	return &favorite, nil
-}
-
-func (s *DiaryService) DeleteFavorite(userID, id uint) error {
-	result := s.repo.DB.Where("user_id = ? AND id = ?", userID, id).Delete(&models.FavoriteFood{})
-	if result.RowsAffected == 0 {
-		return errors.New("избранное не найдено")
 	}
 	return result.Error
 }

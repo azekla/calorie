@@ -7,8 +7,9 @@ import { useAuth } from '../context/AuthContext'
 export default function ProfilePage() {
   const { refresh } = useAuth()
   const { data, loading, error, reload } = useAsyncData(() => api.get('/profile'), [])
-  const [canIEat, setCanIEat] = useState(null)
   const [formState, setFormState] = useState(null)
+  const [notice, setNotice] = useState('')
+  const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
     if (!data) return
@@ -36,44 +37,44 @@ export default function ProfilePage() {
 
   const save = async (event) => {
     event.preventDefault()
-    await api.put('/profile', {
-      user: {
-        name: formState.name,
-        theme: formState.theme,
-      },
-      profile: {
-        gender: formState.gender,
-        heightCm: Number(formState.heightCm),
-        weightKg: Number(formState.weightKg),
-        age: Number(formState.age),
-        activityLevel: formState.activityLevel,
-        goalType: formState.goalType,
-        manualCalorieGoalEnabled: formState.manualCalorieGoalEnabled,
-        dailyCalorieGoal: Number(formState.dailyCalorieGoal),
-        waterGoalMl: Number(formState.waterGoalMl),
-        stepsGoal: Number(formState.stepsGoal),
-      },
-    })
-    await Promise.all([reload(), refresh()])
-    alert('Профиль обновлён')
-  }
-
-  const askCanIEat = async () => {
-    const calories = window.prompt('Сколько калорий в продукте?')
-    if (!calories) return
-    const result = await api.post('/stats/can-i-eat', { calories: Number(calories) })
-    setCanIEat(result)
+    try {
+      setSaveError('')
+      await api.put('/profile', {
+        user: {
+          name: formState.name,
+          theme: formState.theme,
+        },
+        profile: {
+          gender: formState.gender,
+          heightCm: Number(formState.heightCm),
+          weightKg: Number(formState.weightKg),
+          age: Number(formState.age),
+          activityLevel: formState.activityLevel,
+          goalType: formState.goalType,
+          manualCalorieGoalEnabled: formState.manualCalorieGoalEnabled,
+          dailyCalorieGoal: Number(formState.dailyCalorieGoal),
+          waterGoalMl: Number(formState.waterGoalMl),
+          stepsGoal: Number(formState.stepsGoal),
+        },
+      })
+      await Promise.all([reload(), refresh()])
+      setNotice('Профиль обновлён')
+    } catch (err) {
+      setSaveError(err.message)
+    }
   }
 
   const recommendedCalories = data.recommendedCalories
   const activeCalories = formState.manualCalorieGoalEnabled ? Number(formState.dailyCalorieGoal || 0) : recommendedCalories
 
   return (
-    <div className="page-stack two-columns">
+    <div className="page-stack">
       <form className="card grid-form" onSubmit={save}>
         <p className="eyebrow">Профиль</p>
-        <h2>Твой красивый pink-space</h2>
-        <p className="muted-text">Настрой цели, личные параметры и любимую тему приложения.</p>
+        <h2>Тело, цели и тема</h2>
+        <p className="muted-text">Здесь живут только те настройки, которые действительно влияют на дневник и дневную норму.</p>
+        {notice && <div className="notice-banner">{notice}</div>}
+        {saveError && <div className="error-box">{saveError}</div>}
         <div className="form-grid-2">
           <label className="field-label">
             <span>Имя</span>
@@ -145,24 +146,6 @@ export default function ProfilePage() {
         <ThemePicker value={formState.theme} onChange={(theme) => updateField('theme', theme)} />
         <button className="primary-button" type="submit">Сохранить профиль</button>
       </form>
-
-      <section className="page-stack">
-        <div className="card">
-          <p className="eyebrow">Можно ли мне это съесть?</p>
-          <h3>Мини-калькулятор остатка</h3>
-          <button className="primary-button" onClick={askCanIEat}>Проверить продукт</button>
-          {canIEat && (
-            <div className="summary-line">
-              <strong>{canIEat.fit ? 'Да' : 'Лучше не сейчас'}</strong>
-              <p>{canIEat.message}</p>
-            </div>
-          )}
-        </div>
-        <div className="card">
-          <p className="eyebrow">Оформление</p>
-          <p className="muted-text">Три мягкие темы внутри одного стиля: soft pink, sakura pink и strawberry milk.</p>
-        </div>
-      </section>
     </div>
   )
 }

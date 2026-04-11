@@ -7,10 +7,10 @@ export default function HistoryPage() {
 
   return (
     <div className="page-stack">
-      <section className="page-hero card soft-glow">
+      <section className="card soft-glow">
         <p className="eyebrow">История</p>
-        <h2>Прошлые дни и мини-статистика</h2>
-        <p className="muted-text">Смотри динамику без перегруза: сколько было калорий и как выглядел баланс по БЖУ.</p>
+        <h2>Прошлые дни без перегруза</h2>
+        <p className="muted-text">Только даты, калории и БЖУ, чтобы быстро вернуться к нужному дню.</p>
       </section>
       {loading && <div className="card">Загрузка истории...</div>}
       {error && <div className="error-box">{error}</div>}

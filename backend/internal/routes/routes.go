@@ -52,13 +52,10 @@ func SetupRouter(cfg config.Config, db *gorm.DB) *gin.Engine {
 			protected.PUT("/profile/goals", profileHandler.UpdateGoals)
 
 			protected.GET("/entries", diaryHandler.GetEntries)
+			protected.GET("/entries/recent", diaryHandler.GetRecentEntries)
 			protected.POST("/entries", diaryHandler.CreateEntry)
 			protected.PUT("/entries/:id", diaryHandler.UpdateEntry)
 			protected.DELETE("/entries/:id", diaryHandler.DeleteEntry)
-
-			protected.GET("/favorites", diaryHandler.GetFavorites)
-			protected.POST("/favorites", diaryHandler.CreateFavorite)
-			protected.DELETE("/favorites/:id", diaryHandler.DeleteFavorite)
 
 			protected.GET("/meals", diaryHandler.GetMeals)
 			protected.POST("/meals", diaryHandler.CreateMeal)
