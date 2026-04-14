@@ -26,7 +26,7 @@ func Load() Config {
 	cfg := Config{
 		Port:         getEnv("PORT", "8080"),
 		DatabaseURL:  getEnv("DATABASE_URL", "postgres://postgres:postgres@db:5432/tg_calorie?sslmode=disable"),
-		JWTSecret:    getEnv("JWT_SECRET", "super-secret-tg-calorie-key"),
+		JWTSecret:    getEnv("JWT_SECRET", ""),
 		FrontendURL:  getEnv("FRONTEND_URL", "http://localhost:5173"),
 		DemoEmail:    getEnv("DEMO_EMAIL", "demo@tgcalorie.local"),
 		DemoPassword: getEnv("DEMO_PASSWORD", "demo12345"),
@@ -35,8 +35,15 @@ func Load() Config {
 	cfg.CookieSecure = cfg.AppEnv == "production"
 	cfg.AllowedOrigins = parseOrigins(getEnv("ALLOWED_ORIGINS", cfg.FrontendURL+",http://localhost:4173,http://localhost:5173"))
 
-	if cfg.DatabaseURL == "" || cfg.JWTSecret == "" {
-		log.Fatal("DATABASE_URL and JWT_SECRET are required")
+	if cfg.DatabaseURL == "" {
+		log.Fatal("DATABASE_URL is required")
+	}
+	if cfg.JWTSecret == "" {
+		if cfg.AppEnv == "production" {
+			log.Fatal("JWT_SECRET is required in production")
+		}
+		cfg.JWTSecret = "dev-only-insecure-key"
+		log.Println("WARNING: using insecure default JWT_SECRET — set JWT_SECRET env for production")
 	}
 
 	return cfg

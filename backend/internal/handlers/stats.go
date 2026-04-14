@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"kawaii-calorie-app/backend/internal/middleware"
 	"kawaii-calorie-app/backend/internal/services"
@@ -32,15 +31,6 @@ func (h *StatsHandler) History(c *gin.Context) {
 	data, err := h.service.History(middleware.UserID(c))
 	if err != nil {
 		utils.Error(c, http.StatusInternalServerError, "Не удалось получить историю")
-		return
-	}
-	utils.JSON(c, http.StatusOK, data)
-}
-
-func (h *StatsHandler) Summary(c *gin.Context) {
-	data, err := h.service.Today(middleware.UserID(c), c.Query("date"))
-	if err != nil {
-		utils.Error(c, http.StatusInternalServerError, "Не удалось получить summary")
 		return
 	}
 	utils.JSON(c, http.StatusOK, data)
@@ -76,6 +66,5 @@ func (h *StatsHandler) Streak(c *gin.Context) {
 }
 
 func (h *StatsHandler) Health(c *gin.Context) {
-	_, _ = strconv.Atoi("0")
 	utils.JSON(c, http.StatusOK, gin.H{"status": "ok"})
 }

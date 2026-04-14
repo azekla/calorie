@@ -1,7 +1,7 @@
 const themes = [
-  ['soft-pink', 'Soft pink'],
-  ['sakura-pink', 'Sakura pink'],
-  ['strawberry-milk', 'Strawberry milk'],
+  ['soft-pink', 'Мягкий розовый'],
+  ['sakura-pink', 'Сакура'],
+  ['strawberry-milk', 'Клубничное молоко'],
 ]
 
 export default function ThemePicker({ value, onChange }) {

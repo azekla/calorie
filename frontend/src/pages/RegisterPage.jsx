@@ -71,32 +71,28 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="auth-page theme-soft-pink">
-      <div className="auth-card auth-card-wide card soft-glow">
-        <p className="eyebrow">Новый профиль</p>
-        <h1>Настрой дневник сразу под себя</h1>
-        <p className="muted-text">Сначала вводишь параметры тела, затем приложение сразу подсказывает норму калорий и открывает дневник.</p>
-        <form className="grid-form" onSubmit={submit}>
+    <div className="auth-page">
+      <div className="auth-card auth-card-wide card">
+        <p className="eyebrow">Регистрация</p>
+        <h1>Настрой дневник под себя</h1>
+        <form className="grid-form" style={{ marginTop: 16 }} onSubmit={submit}>
           <div className="form-grid-2">
             <label className="field-label">
               <span>Имя</span>
-              <input placeholder="Имя" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
+              <input placeholder="Имя" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} required />
             </label>
             <label className="field-label">
               <span>Email</span>
-              <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))} />
+              <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))} required autoComplete="email" />
             </label>
             <label className="field-label field-span-2">
               <span>Пароль</span>
-              <input type="password" placeholder="Пароль" value={form.password} onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))} />
+              <input type="password" placeholder="Пароль" value={form.password} onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))} required autoComplete="new-password" />
             </label>
           </div>
 
           <div className="calculator-card">
-            <div>
-              <strong>Параметры тела</strong>
-              <p className="muted-text">По этим данным считаем твою базовую дневную норму калорий.</p>
-            </div>
+            <strong>Параметры тела</strong>
             <div className="form-grid-2">
               <label className="field-label">
                 <span>Пол</span>
@@ -108,9 +104,9 @@ export default function RegisterPage() {
               <label className="field-label">
                 <span>Активность</span>
                 <select value={form.activityLevel} onChange={(e) => setForm((prev) => ({ ...prev, activityLevel: e.target.value }))}>
-                  <option value="низкая">Низкая активность</option>
-                  <option value="умеренная">Умеренная активность</option>
-                  <option value="высокая">Высокая активность</option>
+                  <option value="низкая">Низкая</option>
+                  <option value="умеренная">Умеренная</option>
+                  <option value="высокая">Высокая</option>
                 </select>
               </label>
               <label className="field-label">
@@ -136,9 +132,9 @@ export default function RegisterPage() {
             </div>
             <div className="macro-row">
               <div className="macro-pill result-pill"><span>Рекомендация</span><strong>{recommendedCalories} ккал</strong></div>
-              <div className="macro-pill result-pill"><span>Режим</span><strong>{form.manualCalorieGoalEnabled ? 'Ручная цель' : 'Авторасчет'}</strong></div>
+              <div className="macro-pill result-pill"><span>Режим</span><strong>{form.manualCalorieGoalEnabled ? 'Ручная цель' : 'Авторасчёт'}</strong></div>
             </div>
-            <label className="check-row"><input type="checkbox" checked={form.manualCalorieGoalEnabled} onChange={(e) => setForm((prev) => ({ ...prev, manualCalorieGoalEnabled: e.target.checked, dailyCalorieGoal: e.target.checked ? prev.dailyCalorieGoal : recommendedCalories }))} /> Хочу задать норму калорий вручную</label>
+            <label className="check-row"><input type="checkbox" checked={form.manualCalorieGoalEnabled} onChange={(e) => setForm((prev) => ({ ...prev, manualCalorieGoalEnabled: e.target.checked, dailyCalorieGoal: e.target.checked ? prev.dailyCalorieGoal : recommendedCalories }))} /> Задать норму вручную</label>
             {form.manualCalorieGoalEnabled && (
               <label className="field-label">
                 <span>Своя норма калорий</span>
@@ -147,10 +143,10 @@ export default function RegisterPage() {
             )}
           </div>
 
-          <button className="primary-button" type="submit">Создать аккаунт</button>
           {error && <div className="error-box">{error}</div>}
+          <button className="primary-button" type="submit">Создать аккаунт</button>
         </form>
-        <p className="muted-text">Уже есть вход? <Link to="/login">Вернуться на логин</Link></p>
+        <p className="muted-text" style={{ marginTop: 12 }}>Уже есть аккаунт? <Link to="/login">Войти</Link></p>
       </div>
     </div>
   )

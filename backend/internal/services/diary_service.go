@@ -22,13 +22,13 @@ func NewDiaryService(repo *repository.Repository) *DiaryService {
 
 func normalizeDate(date string) time.Time {
 	if date == "" {
-		now := time.Now()
-		return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+		now := time.Now().UTC()
+		return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	}
 	parsed, err := time.Parse("2006-01-02", date)
 	if err != nil {
-		now := time.Now()
-		return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+		now := time.Now().UTC()
+		return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 	}
 	return parsed
 }
@@ -67,7 +67,7 @@ func (s *DiaryService) GetRecentEntries(userID uint) ([]models.FoodEntry, error)
 }
 
 func (s *DiaryService) CreateEntry(userID uint, entry models.FoodEntry) (*models.FoodEntry, error) {
-	if entry.Name == "" || entry.Calories < 0 {
+	if entry.Name == "" || entry.Calories < 0 || entry.Protein < 0 || entry.Fat < 0 || entry.Carbs < 0 || entry.Grams < 0 {
 		return nil, errors.New("укажите название и корректные значения")
 	}
 	if entry.EntryDate.IsZero() {
@@ -92,12 +92,22 @@ func (s *DiaryService) UpdateEntry(userID, id uint, entry models.FoodEntry) (*mo
 		}
 		return nil, err
 	}
-	entry.UserID = userID
-	entry.ID = id
 	if entry.EntryDate.IsZero() {
 		entry.EntryDate = existing.EntryDate
 	}
-	if err := s.repo.DB.Model(&existing).Updates(entry).Error; err != nil {
+	updates := map[string]interface{}{
+		"entry_date":     entry.EntryDate,
+		"meal_category":  entry.MealCategory,
+		"name":           entry.Name,
+		"grams":          entry.Grams,
+		"calories":       entry.Calories,
+		"protein":        entry.Protein,
+		"fat":            entry.Fat,
+		"carbs":          entry.Carbs,
+		"is_sweet":       entry.IsSweet,
+		"notes":          entry.Notes,
+	}
+	if err := s.repo.DB.Model(&existing).Updates(updates).Error; err != nil {
 		return nil, err
 	}
 	if err := s.repo.DB.Where("id = ?", id).First(&existing).Error; err != nil {
@@ -124,6 +134,11 @@ func (s *DiaryService) SaveMeal(userID uint, meal models.MealTemplate) (*models.
 	if meal.Name == "" || len(meal.Items) == 0 {
 		return nil, errors.New("укажите название и минимум один ингредиент")
 	}
+	for _, item := range meal.Items {
+		if item.Calories < 0 || item.Protein < 0 || item.Fat < 0 || item.Carbs < 0 || item.Grams < 0 {
+			return nil, errors.New("значения ингредиентов не могут быть отрицательными")
+		}
+	}
 	meal.UserID = userID
 	meal.TotalCalories = 0
 	meal.TotalProtein = 0
@@ -145,10 +160,6 @@ func (s *DiaryService) SaveMeal(userID uint, meal models.MealTemplate) (*models.
 }
 
 func (s *DiaryService) UpdateMeal(userID, id uint, meal models.MealTemplate) (*models.MealTemplate, error) {
-	var existing models.MealTemplate
-	if err := s.repo.DB.Preload("Items").Where("user_id = ? AND id = ?", userID, id).First(&existing).Error; err != nil {
-		return nil, errors.New("шаблон блюда не найден")
-	}
 	meal.UserID = userID
 	meal.ID = id
 	meal.TotalCalories = 0
@@ -161,8 +172,12 @@ func (s *DiaryService) UpdateMeal(userID, id uint, meal models.MealTemplate) (*m
 		meal.TotalFat += item.Fat
 		meal.TotalCarbs += item.Carbs
 	}
-	returnValue := existing
+	var returnValue models.MealTemplate
 	err := s.repo.DB.Transaction(func(tx *gorm.DB) error {
+		var existing models.MealTemplate
+		if err := tx.Where("user_id = ? AND id = ?", userID, id).First(&existing).Error; err != nil {
+			return errors.New("шаблон блюда не найден")
+		}
 		if err := tx.Model(&existing).Updates(map[string]interface{}{
 			"name":           meal.Name,
 			"description":    meal.Description,

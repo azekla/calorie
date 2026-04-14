@@ -113,8 +113,9 @@ func (s *StatsService) Today(userID uint, date string) (map[string]interface{}, 
 }
 
 func (s *StatsService) History(userID uint) ([]map[string]interface{}, error) {
+	cutoff := time.Now().AddDate(0, -3, 0)
 	var entries []models.FoodEntry
-	if err := s.repo.DB.Where("user_id = ?", userID).Order("entry_date desc").Find(&entries).Error; err != nil {
+	if err := s.repo.DB.Where("user_id = ? AND entry_date >= ?", userID, cutoff).Order("entry_date desc").Find(&entries).Error; err != nil {
 		return nil, err
 	}
 
@@ -183,17 +184,18 @@ func (s *StatsService) Challenge(userID uint, date string) map[string]interface{
 }
 
 func (s *StatsService) streak(userID uint) (int, []string, error) {
+	cutoff := time.Now().AddDate(0, 0, -60)
 	activity := map[string]bool{}
 	var entries []models.FoodEntry
 	var water []models.WaterLog
 	var steps []models.StepLog
-	if err := s.repo.DB.Where("user_id = ?", userID).Find(&entries).Error; err != nil {
+	if err := s.repo.DB.Where("user_id = ? AND entry_date >= ?", userID, cutoff).Find(&entries).Error; err != nil {
 		return 0, nil, err
 	}
-	if err := s.repo.DB.Where("user_id = ?", userID).Find(&water).Error; err != nil {
+	if err := s.repo.DB.Where("user_id = ? AND log_date >= ?", userID, cutoff).Find(&water).Error; err != nil {
 		return 0, nil, err
 	}
-	if err := s.repo.DB.Where("user_id = ?", userID).Find(&steps).Error; err != nil {
+	if err := s.repo.DB.Where("user_id = ? AND log_date >= ?", userID, cutoff).Find(&steps).Error; err != nil {
 		return 0, nil, err
 	}
 	for _, item := range entries {

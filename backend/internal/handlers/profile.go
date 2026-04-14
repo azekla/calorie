@@ -45,14 +45,41 @@ func (h *ProfileHandler) Get(c *gin.Context) {
 
 func (h *ProfileHandler) Update(c *gin.Context) {
 	var body struct {
-		User    models.User    `json:"user"`
-		Profile models.Profile `json:"profile"`
+		User struct {
+			Name  string `json:"name"`
+			Theme string `json:"theme"`
+		} `json:"user"`
+		Profile struct {
+			Gender                   string  `json:"gender"`
+			HeightCM                 int     `json:"heightCm"`
+			WeightKG                 float64 `json:"weightKg"`
+			Age                      int     `json:"age"`
+			ActivityLevel            string  `json:"activityLevel"`
+			GoalType                 string  `json:"goalType"`
+			DailyCalorieGoal         int     `json:"dailyCalorieGoal"`
+			ManualCalorieGoalEnabled bool    `json:"manualCalorieGoalEnabled"`
+			WaterGoalML              int     `json:"waterGoalMl"`
+			StepsGoal                int     `json:"stepsGoal"`
+		} `json:"profile"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		utils.Error(c, http.StatusBadRequest, "Некорректные данные профиля")
 		return
 	}
-	if err := h.service.Update(middleware.UserID(c), body.User, body.Profile); err != nil {
+	user := models.User{Name: body.User.Name, Theme: body.User.Theme}
+	profile := models.Profile{
+		Gender:                   body.Profile.Gender,
+		HeightCM:                 body.Profile.HeightCM,
+		WeightKG:                 body.Profile.WeightKG,
+		Age:                      body.Profile.Age,
+		ActivityLevel:            body.Profile.ActivityLevel,
+		GoalType:                 body.Profile.GoalType,
+		DailyCalorieGoal:         body.Profile.DailyCalorieGoal,
+		ManualCalorieGoalEnabled: body.Profile.ManualCalorieGoalEnabled,
+		WaterGoalML:              body.Profile.WaterGoalML,
+		StepsGoal:                body.Profile.StepsGoal,
+	}
+	if err := h.service.Update(middleware.UserID(c), user, profile); err != nil {
 		utils.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}

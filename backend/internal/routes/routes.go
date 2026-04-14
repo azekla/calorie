@@ -73,7 +73,6 @@ func SetupRouter(cfg config.Config, db *gorm.DB) *gin.Engine {
 
 			protected.GET("/stats/today", statsHandler.Today)
 			protected.GET("/stats/history", statsHandler.History)
-			protected.GET("/stats/summary", statsHandler.Summary)
 			protected.POST("/stats/can-i-eat", statsHandler.CanIEat)
 
 			protected.GET("/challenges/today", statsHandler.Challenge)

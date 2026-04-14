@@ -13,6 +13,7 @@ services:
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile.dev
     environment:
       APP_ENV: development
       PORT: 8080
@@ -22,6 +23,8 @@ services:
       ALLOWED_ORIGINS: http://localhost:5173,http://localhost:4173
       DEMO_EMAIL: ${DEMO_EMAIL}
       DEMO_PASSWORD: ${DEMO_PASSWORD}
+    volumes:
+      - ./backend:/app
     ports:
       - "8080:8080"
     depends_on:
@@ -31,8 +34,12 @@ services:
     build:
       context: ./frontend
     environment:
-      VITE_API_URL: /api
       VITE_API_PROXY_TARGET: http://backend:8080
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/vite.config.js:/app/vite.config.js
     ports:
       - "5173:5173"
     depends_on:

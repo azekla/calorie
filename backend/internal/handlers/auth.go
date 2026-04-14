@@ -58,7 +58,10 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		utils.Error(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	h.setSession(c, user.ID)
+	if err := h.setSession(c, user.ID); err != nil {
+		utils.Error(c, http.StatusInternalServerError, "Не удалось создать сессию")
+		return
+	}
 	utils.JSON(c, http.StatusCreated, user)
 }
 
@@ -76,11 +79,15 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		utils.Error(c, http.StatusUnauthorized, err.Error())
 		return
 	}
-	h.setSession(c, user.ID)
+	if err := h.setSession(c, user.ID); err != nil {
+		utils.Error(c, http.StatusInternalServerError, "Не удалось создать сессию")
+		return
+	}
 	utils.JSON(c, http.StatusOK, user)
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("token", "", -1, "/", "", h.cfg.CookieSecure, true)
 	utils.JSON(c, http.StatusOK, gin.H{"message": "Выход выполнен"})
 }
@@ -94,8 +101,12 @@ func (h *AuthHandler) Me(c *gin.Context) {
 	utils.JSON(c, http.StatusOK, user)
 }
 
-func (h *AuthHandler) setSession(c *gin.Context, userID uint) {
-	token, _ := utils.GenerateToken(h.cfg.JWTSecret, userID)
+func (h *AuthHandler) setSession(c *gin.Context, userID uint) error {
+	token, err := utils.GenerateToken(h.cfg.JWTSecret, userID)
+	if err != nil {
+		return err
+	}
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("token", token, 7*24*3600, "/", "", h.cfg.CookieSecure, true)
+	return nil
 }

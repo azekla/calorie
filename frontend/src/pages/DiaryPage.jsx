@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import FoodEntryForm from '../components/FoodEntryForm'
-import ProgressBar from '../components/ProgressBar'
+import ProgressRing from '../components/ProgressRing'
+import DatePicker from '../components/DatePicker'
 import { api } from '../api/client'
 import { useAsyncData } from '../hooks/useAsyncData'
 import { formatDate, todayString } from '../utils/format'
@@ -16,6 +17,12 @@ export default function DiaryPage() {
   const { data: meals, loading: mealsLoading, error: mealsError, reload: reloadMeals } = useAsyncData(() => api.get('/meals'), [])
   const { data: recentEntries, loading: recentLoading, error: recentError, reload: reloadRecent } = useAsyncData(() => api.get('/entries/recent'), [])
 
+  useEffect(() => {
+    if (!notice) return
+    const timer = setTimeout(() => setNotice(''), 3000)
+    return () => clearTimeout(timer)
+  }, [notice])
+
   const reloadDiary = async () => {
     await Promise.all([reload(), reloadSummary(), reloadRecent()])
   }
@@ -29,7 +36,7 @@ export default function DiaryPage() {
         setNotice('Запись обновлена')
       } else {
         await api.post('/entries', payload)
-        setNotice('Запись добавлена в дневник')
+        setNotice('Добавлено!')
       }
       await reloadDiary()
     } catch (err) {
@@ -52,7 +59,7 @@ export default function DiaryPage() {
           carbs: payload.carbs,
         }],
       })
-      setNotice('Шаблон сохранён для быстрых повторов')
+      setNotice('Шаблон сохранён')
       await reloadMeals()
     } catch (err) {
       setActionError(err.message)
@@ -63,7 +70,7 @@ export default function DiaryPage() {
     try {
       setActionError('')
       await api.delete(`/entries/${id}`)
-      setNotice('Запись удалена')
+      setNotice('Удалено')
       await reloadDiary()
     } catch (err) {
       setActionError(err.message)
@@ -85,7 +92,7 @@ export default function DiaryPage() {
         mealCategory: quickCategory || entry.mealCategory,
         entryDate: selectedDate,
       })
-      setNotice('Прошлая запись добавлена на выбранный день')
+      setNotice('Добавлено!')
       await reloadDiary()
     } catch (err) {
       setActionError(err.message)
@@ -96,7 +103,7 @@ export default function DiaryPage() {
     try {
       setActionError('')
       await api.post(`/meals/${mealId}/add-to-day`, { date: selectedDate, category: quickCategory })
-      setNotice('Шаблон блюда добавлен в дневник')
+      setNotice('Добавлено!')
       await reloadDiary()
     } catch (err) {
       setActionError(err.message)
@@ -114,140 +121,143 @@ export default function DiaryPage() {
     }
   }
 
+  const dateLabel = selectedDate === todayString() ? 'сегодня' : formatDate(selectedDate)
+  const hasEntries = entries && entries.length > 0
+  const hasRecent = recentEntries && recentEntries.length > 0
+  const hasMeals = meals && meals.length > 0
+  const hasQuickRepeats = hasRecent || hasMeals
+
   return (
     <div className="page-stack">
-      <section className="card soft-glow">
-        <div className="row-space diary-summary-head">
-          <div>
-            <p className="eyebrow">Дневник</p>
-            <h2>{formatDate(selectedDate)}</h2>
-            <p className="muted-text">Главный экран: добавление еды, дневная норма и быстрые повторы в одном месте.</p>
+      {/* === 1. PRIMARY ACTION: Add food === */}
+      <section className="card card-primary">
+        <div className="row-space">
+          <h2>Добавить еду</h2>
+          <div className="datepicker-inline">
+            <DatePicker value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} name="selectedDate" />
           </div>
-          <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} />
         </div>
-        {summaryLoading ? <div className="muted-text">Считаем сводку дня...</div> : (
-          <>
-            <div className="dashboard-grid">
-              <div className="macro-pill">
+        {notice && <div className="notice-banner" style={{ marginTop: 8 }}>{notice}</div>}
+        {actionError && <div className="error-box" style={{ marginTop: 8 }}>{actionError}</div>}
+        {editing && (
+          <div className="notice-banner" style={{ marginTop: 8 }} onClick={() => setEditing(null)}>
+            Редактируется: {editing.name}. Нажми, чтобы отменить.
+          </div>
+        )}
+        <div style={{ marginTop: 12 }}>
+          <FoodEntryForm initialValue={editing} defaultDate={selectedDate} onSubmit={saveEntry} onSaveTemplate={!editing ? saveTemplate : undefined} submitLabel={editing ? 'Сохранить' : 'Добавить'} />
+        </div>
+      </section>
+
+      {/* === 2. PROGRESS: Ring + metrics === */}
+      <section className="card">
+        <div className="row-space" style={{ marginBottom: 16 }}>
+          <p className="eyebrow" style={{ margin: 0 }}>{formatDate(selectedDate)}</p>
+        </div>
+        {summaryLoading ? <p className="muted-text">Загрузка...</p> : (
+          <div className="progress-section">
+            <ProgressRing consumed={summary?.consumed || 0} goal={summary?.goal || 2000} remaining={summary?.remaining || 0} />
+            <div className="progress-metrics">
+              <div className="metric-item">
                 <span>Цель</span>
-                <strong>{summary?.goal || 0} ккал</strong>
+                <strong>{summary?.goal || 0}</strong>
               </div>
-              <div className="macro-pill">
+              <div className="metric-item accent">
                 <span>Съедено</span>
-                <strong>{summary?.consumed || 0} ккал</strong>
+                <strong>{summary?.consumed || 0}</strong>
               </div>
-              <div className="macro-pill">
+              <div className="metric-item">
                 <span>Осталось</span>
-                <strong>{summary?.remaining || 0} ккал</strong>
+                <strong>{summary?.remaining || 0}</strong>
               </div>
             </div>
-            <div className="progress-wrap">
-              <div className="progress-header">
-                <strong>Прогресс за день</strong>
-                <span className="muted-text">{summary?.progress || 0}%</span>
-              </div>
-              <ProgressBar value={summary?.progress || 0} label="Калории" />
-            </div>
-          </>
+          </div>
         )}
       </section>
 
-      <div className="page-stack two-columns">
-      <section className="card">
-        <div className="row-space">
-          <div>
-            <p className="eyebrow">Новая запись</p>
-            <h2>Добавь еду без лишних шагов</h2>
+      {/* === 3. TODAY'S ENTRIES (hidden when empty) === */}
+      {(loading || hasEntries) && (
+        <section className="card">
+          <div className="row-space">
+            <h3>Сегодня в дневнике</h3>
+            {hasEntries && <span className="badge-count">{entries.length}</span>}
           </div>
-        </div>
-        {notice && <div className="notice-banner">{notice}</div>}
-        {actionError && <div className="error-box">{actionError}</div>}
-        <FoodEntryForm initialValue={editing} defaultDate={selectedDate} onSubmit={saveEntry} onSaveTemplate={saveTemplate} submitLabel={editing ? 'Сохранить изменения' : 'Добавить запись'} />
-      </section>
+          {loading && <p className="muted-text" style={{ marginTop: 8 }}>Загрузка...</p>}
+          {error && <div className="error-box" style={{ marginTop: 8 }}>{error}</div>}
+          <div className="list-stack" style={{ marginTop: 8 }}>
+            {entries?.map((entry) => (
+              <div key={entry.id} className="entry-card">
+                <div>
+                  <strong>{entry.name}</strong>
+                  <span>{entry.mealCategory} · {entry.grams} г · {entry.calories} ккал</span>
+                </div>
+                <div className="inline-actions">
+                  <button className="ghost-button" onClick={() => setEditing(entry)}>Изменить</button>
+                  <button className="ghost-button danger" onClick={() => removeEntry(entry.id)}>Удалить</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="card">
-        <p className="eyebrow">Записи дня</p>
-        {loading && <div className="muted-text">Загружаем записи...</div>}
-        {error && <div className="error-box">{error}</div>}
-        {!loading && entries?.length === 0 && <div className="empty-box">День пока пустой. Можно начать с завтрака, воды или десерта.</div>}
-        <div className="list-stack">
-          {entries?.map((entry) => (
-            <div key={entry.id} className="entry-card">
+      {/* === 4. QUICK REPEATS (hidden when both empty) === */}
+      {(recentLoading || mealsLoading || hasQuickRepeats) && (
+        <section className="card">
+          <div className="row-space">
+            <h3>Быстро добавить</h3>
+            <label className="field-label quick-category-field">
+              <select value={quickCategory} onChange={(e) => setQuickCategory(e.target.value)}>
+                <option value="завтрак">Завтрак</option>
+                <option value="обед">Обед</option>
+                <option value="ужин">Ужин</option>
+                <option value="перекус">Перекус</option>
+                <option value="напитки">Напитки</option>
+                <option value="сладкое">Сладкое</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="quick-repeat-grid" style={{ marginTop: 12 }}>
+            {hasRecent && (
               <div>
-                <strong>{entry.name}</strong>
-                <span>{entry.mealCategory} • {entry.grams} г • {entry.calories} ккал</span>
-              </div>
-              <div className="inline-actions">
-                <button className="ghost-button" onClick={() => setEditing(entry)}>Редактировать</button>
-                <button className="ghost-button danger" onClick={() => removeEntry(entry.id)}>Удалить</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-      </div>
-
-      <section className="card">
-        <div className="row-space">
-          <div>
-            <p className="eyebrow">Быстрые повторы</p>
-            <h3>Последние записи и сохранённые шаблоны</h3>
-          </div>
-          <label className="field-label quick-category-field">
-            <span>Добавлять как</span>
-            <select value={quickCategory} onChange={(e) => setQuickCategory(e.target.value)}>
-              <option value="завтрак">Завтрак</option>
-              <option value="обед">Обед</option>
-              <option value="ужин">Ужин</option>
-              <option value="перекус">Перекус</option>
-              <option value="напитки">Напитки</option>
-              <option value="сладкое">Сладкое</option>
-            </select>
-          </label>
-        </div>
-
-        <div className="dashboard-grid wide-grid">
-          <div className="card inset-card">
-            <p className="eyebrow">Последние записи</p>
-            {recentLoading && <div className="muted-text">Загружаем быстрые повторы...</div>}
-            {recentError && <div className="error-box">{recentError}</div>}
-            {!recentLoading && recentEntries?.length === 0 && <div className="empty-box">Здесь появятся продукты, которые ты уже добавлял(а) раньше.</div>}
-            <div className="list-stack">
-              {recentEntries?.map((entry) => (
-                <div key={`recent-${entry.id}`} className="entry-card compact-card">
-                  <div>
-                    <strong>{entry.name}</strong>
-                    <span>{entry.grams} г • {entry.calories} ккал • {entry.mealCategory}</span>
-                  </div>
-                  <button className="primary-button" onClick={() => addRecentToDate(entry)}>Добавить на {selectedDate === todayString() ? 'сегодня' : formatDate(selectedDate)}</button>
+                <p className="eyebrow">Недавние</p>
+                <div className="list-stack" style={{ marginTop: 6 }}>
+                  {recentEntries.map((entry) => (
+                    <div key={`recent-${entry.id}`} className="entry-card compact-card">
+                      <div>
+                        <strong>{entry.name}</strong>
+                        <span>{entry.calories} ккал</span>
+                      </div>
+                      <button className="ghost-button accent-soft" onClick={() => addRecentToDate(entry)}>+ {dateLabel}</button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            )}
 
-          <div className="card inset-card">
-            <p className="eyebrow">Мои шаблоны</p>
-            {mealsLoading && <div className="muted-text">Загружаем шаблоны...</div>}
-            {mealsError && <div className="error-box">{mealsError}</div>}
-            {!mealsLoading && meals?.length === 0 && <div className="empty-box">Сохрани любую запись как шаблон, чтобы добавлять её потом в один клик.</div>}
-            <div className="list-stack">
-              {meals?.map((meal) => (
-                <div key={meal.id} className="entry-card compact-card">
-                  <div>
-                    <strong>{meal.name}</strong>
-                    <span>{meal.totalCalories?.toFixed(0)} ккал • Б {meal.totalProtein?.toFixed(1)} • Ж {meal.totalFat?.toFixed(1)} • У {meal.totalCarbs?.toFixed(1)}</span>
-                    {meal.description && <p className="muted-text">{meal.description}</p>}
-                  </div>
-                  <div className="inline-actions">
-                    <button className="primary-button" onClick={() => addMealToDate(meal.id)}>Добавить на {selectedDate === todayString() ? 'сегодня' : formatDate(selectedDate)}</button>
-                    <button className="ghost-button danger" onClick={() => removeMeal(meal.id)}>Удалить</button>
-                  </div>
+            {hasMeals && (
+              <div>
+                <p className="eyebrow">Шаблоны</p>
+                <div className="list-stack" style={{ marginTop: 6 }}>
+                  {meals.map((meal) => (
+                    <div key={meal.id} className="entry-card compact-card">
+                      <div>
+                        <strong>{meal.name}</strong>
+                        <span>{meal.totalCalories?.toFixed(0)} ккал</span>
+                      </div>
+                      <div className="inline-actions">
+                        <button className="ghost-button accent-soft" onClick={() => addMealToDate(meal.id)}>+ {dateLabel}</button>
+                        <button className="ghost-button danger" onClick={() => removeMeal(meal.id)}>Удалить</button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   )
 }

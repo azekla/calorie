@@ -12,6 +12,12 @@ export default function ProfilePage() {
   const [saveError, setSaveError] = useState('')
 
   useEffect(() => {
+    if (!notice) return
+    const timer = setTimeout(() => setNotice(''), 3000)
+    return () => clearTimeout(timer)
+  }, [notice])
+
+  useEffect(() => {
     if (!data) return
     setFormState({
       name: data.user.name,
@@ -29,7 +35,7 @@ export default function ProfilePage() {
     })
   }, [data])
 
-  if (loading) return <div className="card">Загружаем профиль...</div>
+  if (loading) return <div className="card muted-text">Загрузка...</div>
   if (error) return <div className="error-box">{error}</div>
   if (!formState) return null
 
@@ -71,8 +77,7 @@ export default function ProfilePage() {
     <div className="page-stack">
       <form className="card grid-form" onSubmit={save}>
         <p className="eyebrow">Профиль</p>
-        <h2>Тело, цели и тема</h2>
-        <p className="muted-text">Здесь живут только те настройки, которые действительно влияют на дневник и дневную норму.</p>
+        <h2>Настройки</h2>
         {notice && <div className="notice-banner">{notice}</div>}
         {saveError && <div className="error-box">{saveError}</div>}
         <div className="form-grid-2">
@@ -89,15 +94,15 @@ export default function ProfilePage() {
           </label>
           <label className="field-label">
             <span>Рост</span>
-            <input type="number" value={formState.heightCm} onChange={(e) => updateField('heightCm', e.target.value)} placeholder="Рост" />
+            <input type="number" min="1" value={formState.heightCm} onChange={(e) => updateField('heightCm', e.target.value)} />
           </label>
           <label className="field-label">
             <span>Вес</span>
-            <input type="number" step="0.1" value={formState.weightKg} onChange={(e) => updateField('weightKg', e.target.value)} placeholder="Вес" />
+            <input type="number" min="1" step="0.1" value={formState.weightKg} onChange={(e) => updateField('weightKg', e.target.value)} />
           </label>
           <label className="field-label">
             <span>Возраст</span>
-            <input type="number" value={formState.age} onChange={(e) => updateField('age', e.target.value)} placeholder="Возраст" />
+            <input type="number" min="1" value={formState.age} onChange={(e) => updateField('age', e.target.value)} />
           </label>
           <label className="field-label">
             <span>Активность</span>
@@ -108,12 +113,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="calculator-card">
-          <div className="row-space calculator-head">
-            <div>
-              <strong>Цель и калории</strong>
-              <span className="muted-text">Выбери цель из списка, посмотри рекомендацию и при желании задай свою норму на день.</span>
-            </div>
-          </div>
+          <strong>Цель и калории</strong>
           <div className="form-grid-2">
             <label className="field-label">
               <span>Цель</span>
@@ -130,21 +130,21 @@ export default function ProfilePage() {
               <input type="number" value={formState.manualCalorieGoalEnabled ? formState.dailyCalorieGoal : activeCalories} onChange={(e) => updateField('dailyCalorieGoal', e.target.value)} disabled={!formState.manualCalorieGoalEnabled} />
             </label>
           </div>
-          <label className="check-row"><input type="checkbox" checked={formState.manualCalorieGoalEnabled} onChange={(e) => updateField('manualCalorieGoalEnabled', e.target.checked)} /> Хочу задать норму калорий вручную</label>
+          <label className="check-row"><input type="checkbox" checked={formState.manualCalorieGoalEnabled} onChange={(e) => updateField('manualCalorieGoalEnabled', e.target.checked)} /> Задать норму вручную</label>
         </div>
 
         <div className="form-grid-2">
           <label className="field-label">
-            <span>Цель воды</span>
-            <input type="number" value={formState.waterGoalMl} onChange={(e) => updateField('waterGoalMl', e.target.value)} placeholder="Цель воды" />
+            <span>Цель воды (мл)</span>
+            <input type="number" value={formState.waterGoalMl} onChange={(e) => updateField('waterGoalMl', e.target.value)} />
           </label>
           <label className="field-label">
             <span>Цель шагов</span>
-            <input type="number" value={formState.stepsGoal} onChange={(e) => updateField('stepsGoal', e.target.value)} placeholder="Цель шагов" />
+            <input type="number" value={formState.stepsGoal} onChange={(e) => updateField('stepsGoal', e.target.value)} />
           </label>
         </div>
         <ThemePicker value={formState.theme} onChange={(theme) => updateField('theme', theme)} />
-        <button className="primary-button" type="submit">Сохранить профиль</button>
+        <button className="primary-button" type="submit">Сохранить</button>
       </form>
     </div>
   )

@@ -55,7 +55,19 @@ func (s *ProfileService) Update(userID uint, user models.User, profile models.Pr
 		profile.DailyCalorieGoal = utils.CalculateRecommendedCalories(profile.Gender, profile.WeightKG, profile.HeightCM, profile.Age, profile.ActivityLevel, profile.GoalType)
 	}
 
-	return s.repo.DB.Model(&models.Profile{}).Where("user_id = ?", userID).Updates(profile).Error
+	profileUpdates := map[string]interface{}{
+		"gender":                      profile.Gender,
+		"height_cm":                   profile.HeightCM,
+		"weight_kg":                   profile.WeightKG,
+		"age":                         profile.Age,
+		"activity_level":              profile.ActivityLevel,
+		"goal_type":                   profile.GoalType,
+		"daily_calorie_goal":          profile.DailyCalorieGoal,
+		"manual_calorie_goal_enabled": profile.ManualCalorieGoalEnabled,
+		"water_goal_ml":               profile.WaterGoalML,
+		"steps_goal":                  profile.StepsGoal,
+	}
+	return s.repo.DB.Model(&models.Profile{}).Where("user_id = ?", userID).Updates(profileUpdates).Error
 }
 
 func (s *ProfileService) UpdateGoals(userID uint, profile models.Profile) error {

@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Run(db *gorm.DB) error {
+func Run(db *gorm.DB, cfg config.Config) error {
 	var count int64
 	if err := db.Model(&models.User{}).Count(&count).Error; err != nil {
 		return err
@@ -20,14 +20,12 @@ func Run(db *gorm.DB) error {
 	if count > 0 {
 		return nil
 	}
-
-	cfg := config.Load()
 	hash, err := bcrypt.GenerateFromPassword([]byte(cfg.DemoPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 
-	goal := utils.CalculateRecommendedCalories("женский", 58, 165, 24, "умеренная", "поддержание")
+	goal := utils.CalculateRecommendedCalories("женский", 58, 165, 24, "умеренная", "maintain")
 	user := models.User{
 		Email:        cfg.DemoEmail,
 		PasswordHash: string(hash),
@@ -39,7 +37,7 @@ func Run(db *gorm.DB) error {
 			WeightKG:                 58,
 			Age:                      24,
 			ActivityLevel:            "умеренная",
-			GoalType:                 "поддержание",
+			GoalType:                 "maintain",
 			DailyCalorieGoal:         goal,
 			ManualCalorieGoalEnabled: false,
 			WaterGoalML:              2200,
@@ -68,7 +66,7 @@ func Run(db *gorm.DB) error {
 
 	base := time.Now()
 	for dayOffset := 0; dayOffset < 7; dayOffset++ {
-		day := time.Date(base.Year(), base.Month(), base.Day()-dayOffset, 0, 0, 0, 0, time.Local)
+		day := time.Date(base.Year(), base.Month(), base.Day()-dayOffset, 0, 0, 0, 0, time.UTC)
 		entries := []models.FoodEntry{
 			{UserID: user.ID, EntryDate: day, MealCategory: "завтрак", Name: "Овсянка с бананом", Grams: 250, Calories: 320 + float64(dayOffset*3), Protein: 11, Fat: 6, Carbs: 54},
 			{UserID: user.ID, EntryDate: day, MealCategory: "обед", Name: "Рис с курицей", Grams: 280, Calories: 465 + float64(dayOffset*2), Protein: 47, Fat: 6, Carbs: 42},

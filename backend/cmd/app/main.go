@@ -48,7 +48,7 @@ func main() {
 		log.Fatalf("migration failed: %v", err)
 	}
 
-	if err := seed.Run(db); err != nil {
+	if err := seed.Run(db, cfg); err != nil {
 		log.Fatalf("seed failed: %v", err)
 	}
 
